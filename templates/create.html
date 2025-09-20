@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head><title>{% if post %}編集{% else %}新規{% endif %}投稿</title></head>
+<body>
+<h1>{% if post %}編集{% else %}新規{% endif %}投稿</h1>
+<form method="post">
+  <p>タイトル: <input type="text" name="title" value="{{ post.title if post else '' }}"></p>
+  <p>内容: <textarea name="content">{{ post.content if post else '' }}</textarea></p>
+  <p>作者: <input type="text" name="author" value="{{ post.author if post else '' }}"></p>
+  <p>タグ: <input type="text" name="tags" value="{{ post.tags if post else '' }}"></p>
+  <p>ステータス:
+    <select name="status">
+      <option value="draft" {% if post and post.status=='draft' %}selected{% endif %}>下書き</option>
+      <option value="published" {% if post and post.status=='published' %}selected{% endif %}>公開</option>
+    </select>
+  </p>
+  <p><input type="submit" value="保存"></p>
+</form>
+<a href="/">戻る</a>
+</body>
+</html>
