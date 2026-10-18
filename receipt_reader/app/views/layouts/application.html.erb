@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <title><%= content_for(:title) || "領収書読み取り" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <h1><%= link_to "領収書読み取り", root_path %></h1>
+      <p>画像やPDFから日付・金額・取引先を読み取り、CSVやfreee形式で出力します</p>
+    </header>
+    <main>
+      <% if notice %><p class="flash notice"><%= notice %></p><% end %>
+      <% if alert %><p class="flash alert"><%= simple_format(alert, {}, wrapper_tag: "span") %></p><% end %>
+      <%= yield %>
+    </main>
+  </body>
+</html>
