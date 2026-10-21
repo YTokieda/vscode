@@ -2,7 +2,7 @@ class ReceiptsController < ApplicationController
   before_action :set_receipt, only: %i[edit update destroy reextract]
 
   def index
-    @years = Receipt.where.not(transaction_date: nil).pluck(:transaction_date).map(&:year).uniq.sort.reverse
+    @years = available_years
     @year = params[:year].presence&.to_i
     scope = Receipt.with_attached_file.order(Arel.sql("transaction_date IS NULL DESC"), transaction_date: :desc, id: :desc)
     @receipts = @year ? scope.in_year(@year) : scope
@@ -76,7 +76,24 @@ class ReceiptsController < ApplicationController
     end
   end
 
+  # 確定申告用に、1年分を勘定科目ごと・月ごとに合計した表
+  def summary
+    @years = available_years
+    @year = params[:year].presence&.to_i || @years.first || Date.current.year
+    @summary = AccountSummary.new(Receipt.extracted.with_attached_file.in_year(@year), year: @year)
+    @excluded_count = Receipt.in_year(@year).count - @summary.receipt_count
+
+    respond_to do |format|
+      format.html
+      format.csv { send_data @summary.to_csv, filename: "科目別集計_#{@year}年.csv", type: "text/csv; charset=utf-8" }
+    end
+  end
+
   private
+
+  def available_years
+    Receipt.where.not(transaction_date: nil).pluck(:transaction_date).map(&:year).uniq.sort.reverse
+  end
 
   def set_receipt
     @receipt = Receipt.find(params[:id])

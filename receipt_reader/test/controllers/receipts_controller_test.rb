@@ -60,4 +60,22 @@ class ReceiptsControllerTest < ActionDispatch::IntegrationTest
     get export_receipts_path(kind: "freee")
     assert_redirected_to receipts_path(year: nil)
   end
+
+  test "科目別集計を表示してCSVでダウンロードできる" do
+    create_extracted_receipt
+    create_extracted_receipt(vendor: nil)
+    get summary_receipts_path(year: 2026)
+    assert_response :success
+    assert_select "td", "消耗品費"
+    assert_match "1 件は", response.body
+
+    get summary_receipts_path(year: 2026, format: :csv)
+    assert_response :success
+    assert_match "経費合計", response.body.force_encoding("UTF-8")
+  end
+
+  test "領収書がなくても科目別集計の画面は開ける" do
+    get summary_receipts_path
+    assert_response :success
+  end
 end

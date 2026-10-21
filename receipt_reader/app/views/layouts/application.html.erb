@@ -15,6 +15,10 @@
     <header class="site-header">
       <h1><%= link_to "領収書読み取り", root_path %></h1>
       <p>画像やPDFから日付・金額・取引先を読み取り、CSVやfreee形式で出力します</p>
+      <nav class="site-nav">
+        <%= link_to "領収書一覧", receipts_path %>
+        <%= link_to "科目別集計（確定申告用）", summary_receipts_path %>
+      </nav>
     </header>
     <main>
       <% if notice %><p class="flash notice"><%= notice %></p><% end %>

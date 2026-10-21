@@ -44,6 +44,7 @@
 <section class="card">
   <h2>3. CSVで出力</h2>
   <p class="hint">日付・金額・取引先・勘定科目がそろった領収書だけを出力します。<%= @year ? "#{@year}年の分" : "全期間の分" %>が対象です。</p>
+  <p>確定申告の決算書に書き写すときは、<%= link_to "科目別集計", summary_receipts_path(year: @year) %>が便利です。</p>
   <div class="exports">
     <%= form_with url: export_receipts_path, method: :get, data: { turbo: false } do |f| %>
       <%= hidden_field_tag :kind, "generic", id: nil %>

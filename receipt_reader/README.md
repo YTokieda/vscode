@@ -17,6 +17,8 @@
 4. 年ごとに絞り込んで CSV をダウンロード
    - 一覧CSV: UTF-8（BOM付き）なので Excel でそのまま開けます
    - freee用CSV: 「取引・口座振替のインポート」の列に合わせた形式。8%と10%が混ざった領収書は税率ごとに別の取引として出します
+5. **科目別集計（確定申告用）**: 1年分を勘定科目ごと・月ごとに合計した表。年間合計を収支内訳書・青色申告決算書の経費欄に書き写せます。
+   10万円以上の支出（減価償却が必要かもしれないもの）も一覧で確認できます
 
 ## 動かし方
 
@@ -47,6 +49,7 @@ APIキーなしで画面だけ見たいときは `bin/rails db:seed` でサン�
 | `app/jobs/extract_receipt_job.rb` | 読み取りを裏側で動かすジョブ（1枚に数秒〜十数秒かかるため） |
 | `app/services/freee_csv_exporter.rb` | freee 取引インポート用CSVを作る |
 | `app/services/receipt_csv_exporter.rb` | Excel 用の一覧CSVを作る |
+| `app/services/account_summary.rb` | 勘定科目ごと・月ごとの集計（確定申告用） |
 | `app/controllers/receipts_controller.rb` | 画面の処理（アップロード・修正・CSVダウンロード） |
 
 AIの使い方のポイントは `receipt_extractor.rb` にあります。

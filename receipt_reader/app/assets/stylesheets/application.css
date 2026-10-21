@@ -50,3 +50,8 @@ th { background: #f0f3f6; white-space: nowrap; }
 .ai-box { background: #ddf4ff; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; }
 .ai-box p { margin: 4px 0 0; }
 .buttons { display: flex; gap: 16px; align-items: center; margin-top: 16px; }
+.site-nav { margin-top: 8px; display: flex; gap: 16px; }
+.site-nav a { color: #fff; font-size: .9rem; }
+.summary-table td.num, .summary-table th.num { min-width: 64px; }
+.summary-table tr.total td { font-weight: bold; background: #f0f3f6; }
+.summary-table td.zero { color: #b0b7bf; }
