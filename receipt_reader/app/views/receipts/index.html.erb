@@ -1,0 +1,72 @@
+<% if @receipts.any?(&:pending?) %>
+  <% content_for :head do %>
+    <%# 読み取り中のものがあるあいだは、5秒ごとに画面を自動で更新する %>
+    <meta http-equiv="refresh" content="5">
+  <% end %>
+<% end %>
+
+<section class="card">
+  <h2>1. 領収書をアップロード</h2>
+  <%= form_with url: receipts_path, multipart: true, class: "upload" do |f| %>
+    <%= f.file_field :files, multiple: true, accept: (Receipt::IMAGE_TYPES + [Receipt::PDF_TYPE]).join(","), required: true %>
+    <%= f.submit "アップロードして読み取る" %>
+  <% end %>
+  <p class="hint">JPEG・PNG・GIF・WebP（5MBまで）とPDF（30MBまで）に対応。複数選べます。iPhoneの写真（HEIC）はJPEGで保存し直してください。</p>
+</section>
+
+<section class="card">
+  <div class="list-header">
+    <h2>2. 内容を確認して直す</h2>
+    <nav class="years">
+      <%= link_to "すべて", receipts_path, class: ("current" unless @year) %>
+      <% @years.each do |y| %>
+        <%= link_to "#{y}年", receipts_path(year: y), class: ("current" if @year == y) %>
+      <% end %>
+    </nav>
+  </div>
+
+  <% if @receipts.empty? %>
+    <p class="hint">まだ領収書がありません。</p>
+  <% else %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>状態</th><th>日付</th><th>取引先</th><th class="num">金額</th><th>勘定科目</th><th>内容</th><th>確認</th><th></th></tr>
+        </thead>
+        <tbody>
+          <%= render partial: "receipt", collection: @receipts %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</section>
+
+<section class="card">
+  <h2>3. CSVで出力</h2>
+  <p class="hint">日付・金額・取引先・勘定科目がそろった領収書だけを出力します。<%= @year ? "#{@year}年の分" : "全期間の分" %>が対象です。</p>
+  <p>確定申告の決算書に書き写すときは、<%= link_to "科目別集計", summary_receipts_path(year: @year) %>が便利です。</p>
+  <div class="exports">
+    <%= form_with url: export_receipts_path, method: :get, data: { turbo: false } do |f| %>
+      <%= hidden_field_tag :kind, "generic", id: nil %>
+      <%= hidden_field_tag :year, @year, id: nil %>
+      <h3>一覧CSV（Excel用）</h3>
+      <p class="hint">確定申告の集計や、ほかの会計ソフトへの手入力に。</p>
+      <%= f.submit "一覧CSVをダウンロード" %>
+    <% end %>
+
+    <%= form_with url: export_receipts_path, method: :get, data: { turbo: false } do |f| %>
+      <%= hidden_field_tag :kind, "freee", id: nil %>
+      <%= hidden_field_tag :year, @year, id: nil %>
+      <h3>freee 取引インポート用CSV</h3>
+      <label>決済口座（領収書ごとの指定がないとき）
+        <%= text_field_tag :payment_account, nil, placeholder: "例: 現金、プライベート資金", list: "accounts" %>
+      </label>
+      <datalist id="accounts"><option value="現金"><option value="プライベート資金"></datalist>
+      <p class="hint">freeeに登録してある口座名と同じにしてください。空のままだと「未決済」の取引になります。</p>
+      <label>文字コード
+        <%= select_tag :encoding, options_for_select([["Shift_JIS（freeeのサンプルと同じ）", "Shift_JIS"], ["UTF-8", "UTF-8"]]) %>
+      </label>
+      <%= f.submit "freee用CSVをダウンロード" %>
+    <% end %>
+  </div>
+</section>
