@@ -1,0 +1,30 @@
+<tr class="<%= receipt.status %>">
+  <td>
+    <% if receipt.pending? %><span class="badge pending">読み取り中</span>
+    <% elsif receipt.failed? %><span class="badge failed">失敗</span>
+    <% elsif receipt.complete? %><span class="badge ok">OK</span>
+    <% else %><span class="badge warn">未入力あり</span>
+    <% end %>
+  </td>
+  <td><%= receipt.transaction_date&.strftime("%Y/%m/%d") %></td>
+  <td><%= receipt.vendor %></td>
+  <td class="num">
+    <% if receipt.amount %>
+      <%= number_to_currency(receipt.amount, unit: "¥", precision: 0, format: "%u%n") %>
+      <% if receipt.reduced_rate_amount.positive? %><br><small>うち8%: <%= number_to_currency(receipt.reduced_rate_amount, unit: "¥", precision: 0, format: "%u%n") %></small><% end %>
+    <% end %>
+  </td>
+  <td><%= receipt.account_item %></td>
+  <td><%= receipt.description %></td>
+  <td class="notes">
+    <% if receipt.failed? %><span class="error"><%= receipt.error_message %></span><% end %>
+    <% receipt.warnings_list.each do |w| %><div class="warning">⚠ <%= w %></div><% end %>
+  </td>
+  <td class="actions">
+    <% unless receipt.pending? %>
+      <%= link_to "確認・修正", edit_receipt_path(receipt) %>
+      <%= button_to "再読み取り", reextract_receipt_path(receipt), method: :post %>
+    <% end %>
+    <%= button_to "削除", receipt_path(receipt), method: :delete, form: { data: { turbo_confirm: "削除しますか？" } }, class: "danger" %>
+  </td>
+</tr>

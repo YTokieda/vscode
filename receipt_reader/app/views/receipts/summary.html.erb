@@ -1,0 +1,114 @@
+<% content_for :title, "#{@year}年 科目別集計" %>
+<% yen = ->(n) { n.zero? ? "-" : number_with_delimiter(n) } %>
+
+<section class="card">
+  <div class="list-header">
+    <h2><%= @year %>年 勘定科目ごとの集計</h2>
+    <nav class="years">
+      <% @years.each do |y| %>
+        <%= link_to "#{y}年", summary_receipts_path(year: y), class: ("current" if @year == y) %>
+      <% end %>
+    </nav>
+  </div>
+
+  <p class="hint">
+    確認済みの領収書 <%= @summary.receipt_count %> 件の合計です（金額は税込・円）。
+  </p>
+  <% if @excluded_count.positive? %>
+    <p class="warning">
+      ⚠ この年の領収書のうち <%= @excluded_count %> 件は、読み取り中・失敗、または日付・金額・取引先・勘定科目のどれかが空のため、集計に入っていません。
+      <%= link_to "一覧で確認する", receipts_path(year: @year) %>
+    </p>
+  <% end %>
+
+  <% if @summary.receipt_count.zero? %>
+    <p class="hint">この年の領収書はまだありません。</p>
+  <% else %>
+    <div class="table-wrap">
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>勘定科目</th>
+            <% AccountSummary::MONTHS.each do |m| %><th class="num"><%= m %>月</th><% end %>
+            <th class="num">年間合計</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @summary.income_rows.any? %>
+            <tr><th colspan="14">収入</th></tr>
+            <% @summary.income_rows.each do |row| %>
+              <tr>
+                <td><%= row.account_item %></td>
+                <% row.monthly.each do |n| %><td class="num <%= "zero" if n.zero? %>"><%= yen.(n) %></td><% end %>
+                <td class="num"><strong><%= yen.(row.total) %></strong></td>
+              </tr>
+            <% end %>
+          <% end %>
+
+          <tr><th colspan="14">経費</th></tr>
+          <% @summary.expense_rows.each do |row| %>
+            <tr>
+              <td><%= row.account_item %></td>
+              <% row.monthly.each do |n| %><td class="num <%= "zero" if n.zero? %>"><%= yen.(n) %></td><% end %>
+              <td class="num"><strong><%= yen.(row.total) %></strong></td>
+            </tr>
+          <% end %>
+          <tr class="total">
+            <td>経費合計</td>
+            <% @summary.monthly_expense_totals.each do |n| %><td class="num"><%= yen.(n) %></td><% end %>
+            <td class="num"><%= yen.(@summary.expense_total) %></td>
+          </tr>
+
+          <% if @summary.private_rows.any? %>
+            <tr><th colspan="14">経費に入れないもの</th></tr>
+            <% @summary.private_rows.each do |row| %>
+              <tr>
+                <td><%= row.account_item %>（私用）</td>
+                <% row.monthly.each do |n| %><td class="num <%= "zero" if n.zero? %>"><%= yen.(n) %></td><% end %>
+                <td class="num"><%= yen.(row.total) %></td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <p><%= link_to "この表をCSVでダウンロード", summary_receipts_path(year: @year, format: :csv), data: { turbo: false } %></p>
+  <% end %>
+</section>
+
+<% if @summary.large_expenses.any? %>
+  <section class="card">
+    <h2>確認してほしい支出（10万円以上）</h2>
+    <p class="hint">
+      パソコンや机などの備品で1つ10万円以上のものは、買った年に全額を経費にできず、何年かに分けて経費にする（減価償却）場合があります。
+      青色申告なら30万円未満まで一括で経費にできる特例もあります。品物の内容を見て、必要なら税務署や税理士に確認してください。
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>日付</th><th>取引先</th><th>内容</th><th>勘定科目</th><th class="num">金額</th><th></th></tr></thead>
+        <tbody>
+          <% @summary.large_expenses.each do |r| %>
+            <tr>
+              <td><%= r.transaction_date.strftime("%Y/%m/%d") %></td>
+              <td><%= r.vendor %></td>
+              <td><%= r.description %></td>
+              <td><%= r.account_item %></td>
+              <td class="num"><%= number_with_delimiter(r.amount) %></td>
+              <td><%= link_to "確認・修正", edit_receipt_path(r) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<% end %>
+
+<section class="card">
+  <h2>確定申告での使い方</h2>
+  <ul class="hint">
+    <li>「年間合計」の数字を、収支内訳書（白色申告）または青色申告決算書の経費の欄に、同じ名前の科目へ書き写します。</li>
+    <li>決算書にない科目（会議費・新聞図書費・研修費・支払手数料など）は、空いている欄に科目名を書いて使うか、「雑費」にまとめます。</li>
+    <li>この表は領収書から作ったものです。銀行振込やカード払いで領収書がない支払い、売上の記録は別に足す必要があります。</li>
+  </ul>
+</section>

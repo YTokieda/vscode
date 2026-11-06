@@ -1,0 +1,43 @@
+<% content_for :title, "領収書の確認・修正" %>
+
+<div class="edit-layout">
+  <section class="card preview">
+    <h2>元のファイル</h2>
+    <% if @receipt.pdf? %>
+      <iframe src="<%= rails_blob_path(@receipt.file, disposition: "inline") %>" title="PDF"></iframe>
+    <% else %>
+      <%= image_tag rails_blob_path(@receipt.file, disposition: "inline"), alt: @receipt.file.filename.to_s %>
+    <% end %>
+    <p class="hint"><%= link_to @receipt.file.filename.to_s, rails_blob_path(@receipt.file, disposition: "attachment") %></p>
+  </section>
+
+  <section class="card">
+    <h2>読み取り結果</h2>
+    <% if @receipt.error_message.present? %><p class="flash alert"><%= @receipt.error_message %></p><% end %>
+    <% if @receipt.ai_reason.present? %>
+      <div class="ai-box"><strong>AIが勘定科目を選んだ理由</strong><p><%= @receipt.ai_reason %></p></div>
+    <% end %>
+    <% @receipt.warnings_list.each do |w| %><p class="warning">⚠ <%= w %></p><% end %>
+
+    <%= form_with model: @receipt, class: "receipt-form" do |f| %>
+      <% if @receipt.errors.any? %>
+        <ul class="flash alert"><% @receipt.errors.full_messages.each do |m| %><li><%= m %></li><% end %></ul>
+      <% end %>
+      <label>日付 <%= f.date_field :transaction_date %></label>
+      <label>取引先 <%= f.text_field :vendor %></label>
+      <label>合計金額（税込・円） <%= f.number_field :amount, min: 0 %></label>
+      <label>うち軽減税率8%の対象額（円） <%= f.number_field :reduced_rate_amount, min: 0 %></label>
+      <label>残りの部分の税率 <%= f.select :main_tax_rate, [["10%", 10], ["対象外（切手・印紙など）", 0]] %></label>
+      <label>収支区分 <%= f.select :entry_side, Receipt::ENTRY_SIDES %></label>
+      <label>勘定科目 <%= f.text_field :account_item, list: "account-items" %></label>
+      <datalist id="account-items"><% Receipt::ACCOUNT_ITEMS.each do |a| %><option value="<%= a %>"><% end %></datalist>
+      <label>内容 <%= f.text_field :description %></label>
+      <label>インボイス登録番号 <%= f.text_field :invoice_number, placeholder: "T1234567890123" %></label>
+      <label>決済口座（空なら出力時の指定を使う） <%= f.text_field :payment_account, placeholder: "例: 現金" %></label>
+      <div class="buttons">
+        <%= f.submit "保存" %>
+        <%= link_to "戻る", receipts_path %>
+      </div>
+    <% end %>
+  </section>
+</div>
